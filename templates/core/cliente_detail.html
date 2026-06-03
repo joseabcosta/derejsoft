@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <div>
+        <a class="d-flex align-items-center gap-2 text-muted" href="{% url 'cliente_list' %}" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Volver a Clientes</span>
+        </a>
+        <h1 class="page-title" style="margin: 0;">Ficha del Cliente</h1>
+        <p class="page-description">Historial completo, facturación, amortizaciones y balances contables del cliente.</p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'cliente_edit' cliente.pk %}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Editar Cliente</span>
+    </a>
+</div>
+
+<div class="grid-2" style="grid-template-columns: 1fr 2.2fr; align-items: start; gap: 2rem;">
+    <!-- Left Column: User Profile Details -->
+    <div class="card shadow-md">
+        <div class="card-body">
+            <!-- Profile Header -->
+            <div class="d-flex flex-column align-items-center text-center mb-4" style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 2.25rem; margin-bottom: 1rem; border: 3px solid var(--border);">
+                    {{ cliente.nombre|slice:":1"|upper }}
+                </div>
+                <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">{{ cliente.nombre }}</h3>
+                <span class="badge {% if cliente.estado == 'ACTIVO' %}badge-success{% else %}badge-secondary{% endif %}">
+                    {{ cliente.get_estado_display }}
+                </span>
+            </div>
+            
+            <!-- Metadata details -->
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <span class="text-muted" style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.15rem;">Cédula o RNC</span>
+                    <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">{{ cliente.cedula }}</span>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.15rem;">Teléfono</span>
+                    <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">{{ cliente.telefono_principal }}</span>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.15rem;">Correo Electrónico</span>
+                    <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); word-break: break-all;">{{ cliente.correo }}</span>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.15rem;">Dirección</span>
+                    <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-main);">{{ cliente.direccion }}</span>
+                </div>
+                <div style="background: var(--bg-app); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-top: 0.5rem;">
+                    <span class="text-muted" style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">Saldo Pendiente</span>
+                    <span style="font-size: 1.5rem; font-weight: 800; color: {% if saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">
+                        RD$ {{ cpc.saldo_pendiente|intcomma }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Financial History -->
+    <div class="d-flex flex-column gap-4">
+        <!-- Emitted Invoices -->
+        <div class="card shadow-md">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title" style="margin: 0;">Facturas Emitidas</h5>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Factura #</th>
+                                <th>Fecha Emisión</th>
+                                <th class="text-right">Total Facturado</th>
+                                <th class="text-right">Saldo Pendiente</th>
+                                <th class="text-center" style="width: 100px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for factura in facturas %}
+                            <tr>
+                                <td style="font-weight: 700; color: var(--primary);">{{ factura.numero }}</td>
+                                <td>{{ factura.fecha }}</td>
+                                <td class="text-right" style="font-weight: 600;">RD$ {{ factura.total|intcomma }}</td>
+                                <td class="text-right" style="font-weight: 700; color: {% if factura.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">
+                                    RD$ {{ factura.saldo_pendiente|intcomma }}
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn btn-sm btn-outline-primary" href="{% url 'factura_pdf' factura.pk %}" style="padding: 0.35rem 0.65rem;">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>PDF</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-muted text-center" style="padding: 2rem;">No hay facturas registradas para este cliente.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Payments -->
+        <div class="card shadow-md">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title" style="margin: 0;">Pagos e Ingresos Recientes</h5>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha de Pago</th>
+                                <th class="text-right">Monto Amortizado</th>
+                                <th>Método de Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pago in pagos|slice:":5" %}
+                            <tr>
+                                <td>{{ pago.fecha }}</td>
+                                <td class="text-right" style="font-weight: 700; color: var(--success);">RD$ {{ pago.monto_pagado|intcomma }}</td>
+                                <td>
+                                    <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.08); color: var(--success); font-weight: 600; padding: 0.25rem 0.6rem;">
+                                        {{ pago.get_metodo_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-muted text-center" style="padding: 2rem;">No se han registrado transacciones de pago para este cliente.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

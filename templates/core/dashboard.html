@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-description">Centro de mando de ventas, clientes y control financiero de software.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'cuenta_por_cobrar_list' %}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Ver Cuentas por Cobrar</span>
+    </a>
+</div>
+
+<!-- KPI Metrics Grid -->
+<div class="grid-4 mb-4">
+    <!-- Ventas del Día -->
+    <div class="card card-accent-blue shadow-md">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Ventas del Día</span>
+                <span style="color: var(--primary); background: var(--primary-light); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                </span>
+            </div>
+            <h3 class="card-value">RD$ {{ ventas_dia|intcomma }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Actualizado en tiempo real</p>
+        </div>
+    </div>
+
+    <!-- Ventas del Mes -->
+    <div class="card card-accent-blue shadow-md">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Ventas del Mes</span>
+                <span style="color: var(--primary); background: var(--primary-light); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </span>
+            </div>
+            <h3 class="card-value">RD$ {{ ventas_mes|intcomma }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Acumulado mes en curso</p>
+        </div>
+    </div>
+
+    <!-- Ventas del Año -->
+    <div class="card card-accent-blue shadow-md">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Ventas del Año</span>
+                <span style="color: var(--primary); background: var(--primary-light); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </span>
+            </div>
+            <h3 class="card-value">RD$ {{ ventas_ano|intcomma }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Ventas globales del año</p>
+        </div>
+    </div>
+
+    <!-- Total Clientes -->
+    <div class="card shadow-md">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Total Clientes</span>
+                <span style="color: #6366f1; background: rgba(99, 102, 241, 0.08); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </span>
+            </div>
+            <h3 class="card-value">{{ total_clientes }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Clientes registrados activos</p>
+        </div>
+    </div>
+
+    <!-- Proyectos Registrados -->
+    <div class="card shadow-md">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Proyectos Software</span>
+                <span style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </span>
+            </div>
+            <h3 class="card-value">{{ total_software }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Contratos de software activos</p>
+        </div>
+    </div>
+
+    <!-- Cuentas por Cobrar -->
+    <div class="card shadow-md" style="border-top: 4px solid var(--danger);">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Por Cobrar</span>
+                <span style="color: var(--danger); background: var(--danger-light); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                </span>
+            </div>
+            <h3 class="card-value" style="color: var(--danger);">RD$ {{ cuentas_por_cobrar|intcomma }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Saldo pendiente acumulado</p>
+        </div>
+    </div>
+
+    <!-- Pagos Recibidos -->
+    <div class="card shadow-md" style="border-top: 4px solid var(--success);">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle text-muted">Ingresos Cobrados</span>
+                <span style="color: var(--success); background: var(--success-light); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                </span>
+            </div>
+            <h3 class="card-value" style="color: var(--success);">RD$ {{ pagos_recibidos|floatformat:2 }}</h3>
+            <p class="text-muted mt-1" style="font-size: 0.8rem">Flujo de caja total histórico</p>
+        </div>
+    </div>
+
+    <!-- Balance General -->
+    <div class="card shadow-md" style="background: linear-gradient(135deg, #1e3a8a, #0b1329); color: #ffffff;">
+        <div class="card-body d-flex flex-column justify-content-between h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-subtitle" style="color: #94a3b8;">Balance General</span>
+                <span style="color: #60a5fa; background: rgba(96, 165, 250, 0.15); padding: 0.35rem; border-radius: var(--radius-sm)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </span>
+            </div>
+            <h3 class="card-value" style="color: #ffffff;">RD$ {{ balance_general|floatformat:2 }}</h3>
+            <p class="" style="font-size: 0.8rem; color: #94a3b8;">Ingresos netos año en curso</p>
+        </div>
+    </div>
+</div>
+
+<!-- Graphs Section -->
+<div class="grid-2">
+    <!-- Ventas por Mes -->
+    <div class="card shadow-md">
+        <div class="card-body">
+            <h5 class="card-title">Ventas por Mes</h5>
+            <div style="height: 300px; position: relative;">
+                <canvas id="ventasChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingresos por Mes -->
+    <div class="card shadow-md">
+        <div class="card-body">
+            <h5 class="card-title">Ingresos por Mes</h5>
+            <div style="height: 300px; position: relative;">
+                <canvas id="ingresosChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clientes nuevos por mes -->
+    <div class="card shadow-md">
+        <div class="card-body">
+            <h5 class="card-title">Clientes nuevos por Mes</h5>
+            <div style="height: 300px; position: relative;">
+                <canvas id="clientesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagos Recibidos -->
+    <div class="card shadow-md">
+        <div class="card-body">
+            <h5 class="card-title">Volumen de Transacciones (Pagos)</h5>
+            <div style="height: 300px; position: relative;">
+                <canvas id="pagosChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const meses = {{ meses| safe }};
+        const ventasPorMes = {{ ventas_por_mes| safe }};
+        const ingresosPorMes = {{ ingresos_por_mes| safe }};
+        const clientesNuevos = {{ clientes_nuevos| safe }};
+        const pagosPorMes = {{ pagos_por_mes| safe }};
+
+        // Chart styling configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { family: "'Inter', sans-serif", size: 12, weight: 600 },
+                        color: "#475569"
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "#0f172a",
+                    titleFont: { family: "'Plus Jakarta Sans', sans-serif", size: 13, weight: 700 },
+                    bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                    padding: 12,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: "#64748b" }
+                },
+                y: {
+                    grid: { color: "#e2e8f0" },
+                    ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: "#64748b" }
+                }
+            }
+        };
+
+        // 1. Ventas Chart (Area Gradient Sapphire Blue)
+        const ctxVentas = document.getElementById('ventasChart').getContext('2d');
+        const gradVentas = ctxVentas.createLinearGradient(0, 0, 0, 300);
+        gradVentas.addColorStop(0, 'rgba(37, 99, 235, 0.35)');
+        gradVentas.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+
+        new Chart(ctxVentas, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Ventas facturadas (RD$)',
+                    data: ventasPorMes,
+                    borderColor: '#2563eb',
+                    borderWidth: 3,
+                    backgroundColor: gradVentas,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#2563eb',
+                    pointHoverRadius: 7
+                }]
+            },
+            options: chartOptions
+        });
+
+        // 2. Ingresos Chart (Bar Chart Teal/Green)
+        const ctxIngresos = document.getElementById('ingresosChart').getContext('2d');
+        const gradIngresos = ctxIngresos.createLinearGradient(0, 0, 0, 300);
+        gradIngresos.addColorStop(0, '#10b981');
+        gradIngresos.addColorStop(1, '#059669');
+
+        new Chart(ctxIngresos, {
+            type: 'bar',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Ingresos cobrados (RD$)',
+                    data: ingresosPorMes,
+                    backgroundColor: gradIngresos,
+                    borderRadius: 8,
+                    barThickness: 16
+                }]
+            },
+            options: chartOptions
+        });
+
+        // 3. Clientes Nuevos Chart (Smooth Violet line)
+        const ctxClientes = document.getElementById('clientesChart').getContext('2d');
+        const gradClientes = ctxClientes.createLinearGradient(0, 0, 0, 300);
+        gradClientes.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+        gradClientes.addColorStop(1, 'rgba(139, 92, 246, 0.02)');
+
+        new Chart(ctxClientes, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Clientes nuevos',
+                    data: clientesNuevos,
+                    borderColor: '#8b5cf6',
+                    borderWidth: 3,
+                    backgroundColor: gradClientes,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointHoverRadius: 7
+                }]
+            },
+            options: chartOptions
+        });
+
+        // 4. Pagos Chart (Gradient Blue-violet bars)
+        const ctxPagos = document.getElementById('pagosChart').getContext('2d');
+        const gradPagos = ctxPagos.createLinearGradient(0, 0, 0, 300);
+        gradPagos.addColorStop(0, '#6366f1');
+        gradPagos.addColorStop(1, '#4f46e5');
+
+        new Chart(ctxPagos, {
+            type: 'bar',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Cantidad de Transacciones',
+                    data: pagosPorMes,
+                    backgroundColor: gradPagos,
+                    borderRadius: 8,
+                    barThickness: 16
+                }]
+            },
+            options: chartOptions
+        });
+    });
+</script>
+{% endblock %}

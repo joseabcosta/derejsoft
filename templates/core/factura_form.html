@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a class="d-flex align-items-center gap-2 text-muted" href="{% url 'factura_list' %}" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Volver al Historial</span>
+        </a>
+        <h1 class="page-title">Nueva Factura</h1>
+        <p class="page-description">Complete el formulario para generar un nuevo documento fiscal en el sistema.</p>
+    </div>
+</div>
+
+<div class="form-card">
+    <div class="card shadow-md">
+        <div class="card-body" style="padding: 2.5rem;">
+            <div class="d-flex align-items-center gap-3 mb-4" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
+                <div>
+                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">Datos de la Factura</h3>
+                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">Complete todos los campos del documento fiscal.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <!-- Cliente y Proyecto -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Asignación</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}<div class="field-error">{{ form.cliente.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.proyecto.id_for_label }}">{{ form.proyecto.label }}</label>
+                            {{ form.proyecto }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos del documento -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Datos del Documento</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.numero.id_for_label }}">Número de Factura <span class="text-muted" style="font-weight: 400;">(opcional)</span></label>
+                            {{ form.numero }}
+                            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Si lo deja vacío, se genera automáticamente.</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.fecha.id_for_label }}">{{ form.fecha.label }}</label>
+                            {{ form.fecha }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.concepto.id_for_label }}">{{ form.concepto.label }}</label>
+                        {{ form.concepto }}
+                        {% if form.concepto.errors %}<div class="field-error">{{ form.concepto.errors|striptags }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Montos -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Montos</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.monto.id_for_label }}">Monto (RD$)</label>
+                            {{ form.monto }}
+                            {% if form.monto.errors %}<div class="field-error">{{ form.monto.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.impuestos.id_for_label }}">ITBIS / Impuestos (RD$)</label>
+                            {{ form.impuestos }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condición y Método de Pago -->
+                <div style="margin-bottom: 2rem;">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Condición y Método de Pago</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.condicion_pago.id_for_label }}">{{ form.condicion_pago.label }}</label>
+                            {{ form.condicion_pago }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.metodo_pago.id_for_label }}">{{ form.metodo_pago.label }}</label>
+                            {{ form.metodo_pago }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center" style="padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <button class="btn btn-primary" type="submit">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>Registrar Factura</span>
+                    </button>
+                    <a class="btn btn-secondary" href="{% url 'factura_list' %}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

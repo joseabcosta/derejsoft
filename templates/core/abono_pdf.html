@@ -1,0 +1,168 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo de Abono #{{ abono.pk }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-info {
+            text-align: right;
+        }
+        .company-info h2 {
+            margin: 0;
+            color: #2563eb;
+            font-size: 24px;
+        }
+        .company-info p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .receipt-title {
+            font-size: 28px;
+            color: #1e293b;
+            margin: 0 0 10px;
+            font-weight: bold;
+        }
+        .receipt-meta {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .client-section {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .client-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1e293b;
+            font-size: 16px;
+        }
+        .client-section p {
+            margin: 5px 0;
+        }
+        .financial-summary {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .financial-summary th {
+            background-color: #f1f5f9;
+            color: #475569;
+            text-align: left;
+            padding: 12px;
+            font-weight: bold;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .financial-summary td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .financial-summary .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        .total-row td {
+            font-size: 16px;
+            color: #10b981;
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1 class="receipt-title">RECIBO DE PAGO</h1>
+            <div class="receipt-meta">
+                <div><strong>No. Recibo:</strong> {{ abono.pk|stringformat:"06d" }}</div>
+                <div><strong>Fecha:</strong> {{ abono.fecha|date:"d/m/Y H:i" }}</div>
+                <div><strong>Referencia Factura:</strong> {{ abono.factura.numero }}</div>
+            </div>
+        </div>
+        <div class="company-info">
+            <!-- Logo Placeholder -->
+            <div style="font-size: 32px; font-weight: 800; color: #2563eb; letter-spacing: -1px; margin-bottom: 5px;">
+                DerejSoft
+            </div>
+            <p><strong>Teléfono:</strong> (809) 555-0199</p>
+            <p><strong>Email:</strong> contacto@derejsoft.com</p>
+        </div>
+    </div>
+
+    <div class="client-section">
+        <h3>RECIBÍ DE:</h3>
+        <p><strong>{{ abono.cliente.nombre }}</strong></p>
+        {% if abono.cliente.email %}<p>Email: {{ abono.cliente.email }}</p>{% endif %}
+        {% if abono.cliente.telefono %}<p>Tel: {{ abono.cliente.telefono }}</p>{% endif %}
+    </div>
+
+    <table class="financial-summary">
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th class="amount">Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Balance Original de la Factura</td>
+                <td class="amount">RD$ {{ abono.factura.total|intcomma }}</td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>Monto Pagado Hoy</strong></td>
+                <td class="amount"><strong>RD$ {{ abono.monto|intcomma }}</strong></td>
+            </tr>
+            <tr>
+                <td style="color: {% if cpc and cpc.saldo_pendiente > 0 %}#ef4444{% else %}#10b981{% endif %};">
+                    <strong>Saldo Pendiente Restante</strong>
+                </td>
+                <td class="amount" style="color: {% if cpc and cpc.saldo_pendiente > 0 %}#ef4444{% else %}#10b981{% endif %};">
+                    {% if cpc %}
+                        <strong>RD$ {{ cpc.saldo_pendiente|intcomma }}</strong>
+                    {% else %}
+                        <strong>RD$ 0.00</strong>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 40px; text-align: center;">
+        <p style="margin-bottom: 60px;">Firma Autorizada</p>
+        <div style="width: 250px; border-bottom: 1px solid #1e293b; margin: 0 auto;"></div>
+        <p style="margin-top: 5px; color: #64748b;">{{ abono.usuario.get_full_name|default:abono.usuario.username }}</p>
+    </div>
+
+    <div class="footer">
+        <p>Este documento es un comprobante de pago válido asociado a la factura {{ abono.factura.numero }}.</p>
+        <p>DerejSoft - Sistema Inteligente de Facturación</p>
+    </div>
+</body>
+</html>

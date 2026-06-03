@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Cuentas por Cobrar</h1>
+        <p class="page-description">Facturas con saldo pendiente. Registre abonos o liquide cuentas directamente.</p>
+    </div>
+    {% if total_pendiente > 0 %}
+    <div style="background: var(--danger-light); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; text-align: right;">
+        <span class="text-muted" style="font-size: 0.78rem; display: block;">Total pendiente</span>
+        <span style="font-size: 1.4rem; font-weight: 800; color: var(--danger); font-family: 'Plus Jakarta Sans', sans-serif;">RD$ {{ total_pendiente|intcomma }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pendientes -->
+{% if cuentas %}
+<div class="card shadow-md" style="margin-bottom: 1.5rem;">
+    <div class="card-body" style="padding: 0;">
+        <div style="padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--danger);"></div>
+            <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 0.95rem; margin: 0;">Facturas Pendientes ({{ cuentas.count }})</h4>
+        </div>
+        <table class="table" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Factura #</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-right">Abonado</th>
+                    <th class="text-right">Saldo</th>
+                    <th class="text-center">Vencimiento</th>
+                    <th class="text-center" style="width: 200px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in cuentas %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
+                                {{ cuenta.cliente.nombre|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <a href="{% url 'cliente_detail' cuenta.cliente.pk %}" style="font-weight: 600; color: var(--text-main);">{{ cuenta.cliente.nombre }}</a>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'factura_detail' cuenta.factura.pk %}" style="font-weight: 700; color: var(--primary);">{{ cuenta.factura.numero }}</a>
+                    </td>
+                    <td class="text-right" style="font-weight: 600;">RD$ {{ cuenta.total_adeudado|intcomma }}</td>
+                    <td class="text-right" style="color: var(--success); font-weight: 600;">RD$ {{ cuenta.monto_abonado|intcomma }}</td>
+                    <td class="text-right" style="font-weight: 800; color: var(--danger); font-size: 1rem;">RD$ {{ cuenta.saldo_pendiente|intcomma }}</td>
+                    <td class="text-center">
+                        {% if cuenta.fecha_vencimiento %}
+                        <span style="font-weight: 500; font-size: 0.88rem;">{{ cuenta.fecha_vencimiento }}</span>
+                        {% else %}
+                        <span class="text-muted" style="font-size: 0.85rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a class="btn btn-sm btn-primary" href="{% url 'abono_create' cuenta.factura.pk %}" style="padding: 0.35rem 0.7rem; font-size: 0.82rem;" title="Registrar abono parcial">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Abonar
+                            </a>
+                            <a class="btn btn-sm btn-secondary" href="{% url 'factura_liquidar' cuenta.factura.pk %}"
+                               onclick="return confirm('¿Liquidar el saldo completo de RD$ {{ cuenta.saldo_pendiente|intcomma }}?')"
+                               style="padding: 0.35rem 0.7rem; font-size: 0.82rem;" title="Liquidar saldo completo">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Liquidar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-md" style="margin-bottom: 1.5rem;">
+    <div class="card-body d-flex flex-column align-items-center" style="padding: 3rem; text-align: center;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--success-light); color: var(--success); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">¡Sin cuentas pendientes!</h4>
+        <p class="text-muted" style="font-size: 0.9rem;">Todas las facturas han sido saldadas correctamente.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Cuentas Pagadas -->
+{% if cuentas_pagadas %}
+<div class="card shadow-md">
+    <div class="card-body" style="padding: 0;">
+        <div style="padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></div>
+            <h4 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 0.95rem; margin: 0; color: var(--success);">Facturas Saldadas ({{ cuentas_pagadas.count }})</h4>
+        </div>
+        <table class="table" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Factura #</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Ver</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in cuentas_pagadas %}
+                <tr style="opacity: 0.75;">
+                    <td style="font-weight: 600;">{{ cuenta.cliente.nombre }}</td>
+                    <td>
+                        <a href="{% url 'factura_detail' cuenta.factura.pk %}" style="font-weight: 700; color: var(--primary);">{{ cuenta.factura.numero }}</a>
+                    </td>
+                    <td class="text-right" style="font-weight: 600;">RD$ {{ cuenta.total_adeudado|intcomma }}</td>
+                    <td class="text-center"><span class="badge badge-success">Saldada</span></td>
+                    <td class="text-center">
+                        <a href="{% url 'factura_detail' cuenta.factura.pk %}" class="btn btn-sm btn-outline-primary" style="padding: 0.3rem 0.65rem; font-size: 0.8rem;">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

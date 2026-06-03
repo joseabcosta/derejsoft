@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Historial de Facturas</h1>
+        <p class="page-description">Registro completo de todos los documentos fiscales emitidos. Descargue o consulte el detalle de cada factura.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'factura_create' %}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Nueva Factura</span>
+    </a>
+</div>
+
+<!-- Filtros -->
+<form method="get" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <input class="form-control" type="text" name="q" value="{{ query }}" placeholder="Buscar por número, cliente o concepto…" style="flex: 1; min-width: 220px; max-width: 380px;" />
+        <select class="form-control" name="estado" style="width: 160px;">
+            <option value="">— Estado —</option>
+            <option value="activa" {% if estado == 'activa' %}selected{% endif %}>Activas</option>
+            <option value="anulada" {% if estado == 'anulada' %}selected{% endif %}>Anuladas</option>
+        </select>
+        <select class="form-control" name="condicion" style="width: 160px;">
+            <option value="">— Condición —</option>
+            <option value="contado" {% if condicion == 'contado' %}selected{% endif %}>Al Contado</option>
+            <option value="credito" {% if condicion == 'credito' %}selected{% endif %}>A Crédito</option>
+        </select>
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+        {% if query or estado or condicion %}
+        <a class="btn btn-secondary" href="{% url 'factura_list' %}">Limpiar</a>
+        {% endif %}
+    </div>
+</form>
+
+{% if facturas %}
+<div class="card shadow-md">
+    <div class="card-body" style="padding: 0;">
+        <table class="table" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th>Factura #</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Concepto</th>
+                    <th class="text-center">Condición</th>
+                    <th class="text-center">Método</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center" style="width: 120px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas %}
+                <tr>
+                    <td style="font-weight: 700; color: var(--primary);">
+                        <a href="{% url 'factura_detail' factura.pk %}" style="color: var(--primary);">{{ factura.numero }}</a>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; flex-shrink: 0;">
+                                {{ factura.cliente.nombre|slice:":1"|upper }}
+                            </div>
+                            <a href="{% url 'cliente_detail' factura.cliente.pk %}" style="font-weight: 600; color: var(--text-main);">{{ factura.cliente.nombre }}</a>
+                        </div>
+                    </td>
+                    <td class="text-muted" style="font-size: 0.88rem;">{{ factura.fecha }}</td>
+                    <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem;">{{ factura.concepto }}</td>
+                    <td class="text-center">
+                        {% if factura.condicion_pago == 'CONTADO' %}
+                        <span class="badge badge-success">Contado</span>
+                        {% else %}
+                        <span class="badge badge-warning">Crédito</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-secondary">{{ factura.get_metodo_pago_display }}</span>
+                    </td>
+                    <td class="text-right" style="font-weight: 800; font-size: 0.95rem;">RD$ {{ factura.total|intcomma }}</td>
+                    <td class="text-center">
+                        {% if factura.is_active %}
+                        <span class="badge badge-success">Activa</span>
+                        {% else %}
+                        <span class="badge badge-danger">Anulada</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'factura_detail' factura.pk %}" style="padding: 0.3rem 0.55rem; font-size: 0.8rem;" title="Ver detalle">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </a>
+                            <a class="btn btn-sm btn-secondary" href="{% url 'factura_pdf' factura.pk %}" style="padding: 0.3rem 0.55rem; font-size: 0.8rem;" title="Descargar PDF">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-md">
+    <div class="card-body d-flex flex-column align-items-center justify-content-center" style="padding: 4rem 2rem; text-align: center;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        </div>
+        <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">
+            {% if query or estado or condicion %}No hay resultados{% else %}Sin facturas registradas{% endif %}
+        </h3>
+        <p class="text-muted" style="max-width: 400px; margin-bottom: 1.5rem;">
+            {% if query or estado or condicion %}Ajuste los filtros de búsqueda.{% else %}Genere la primera factura del sistema.{% endif %}
+        </p>
+        {% if not query and not estado and not condicion %}
+        <a class="btn btn-primary" href="{% url 'factura_create' %}">Crear Primera Factura</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

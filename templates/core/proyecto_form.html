@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a class="d-flex align-items-center gap-2 text-muted" href="{% url 'proyecto_list' %}" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Volver a Proyectos</span>
+        </a>
+        <h1 class="page-title">{{ titulo }}</h1>
+        <p class="page-description">Complete los datos del proyecto para registrarlo en el sistema.</p>
+    </div>
+</div>
+
+<div class="form-card">
+    <div class="card shadow-md">
+        <div class="card-body" style="padding: 2.5rem;">
+            <div class="d-flex align-items-center gap-3 mb-4" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div>
+                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">{{ titulo }}</h3>
+                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">Información del proyecto de desarrollo o venta de software.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <!-- Sección: Datos Básicos -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Información General</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}<div class="field-error">{{ form.cliente.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.software.id_for_label }}">{{ form.software.label }}</label>
+                            {{ form.software }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}<div class="field-error">{{ form.nombre.errors|striptags }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+                        {{ form.descripcion }}
+                    </div>
+                </div>
+
+                <!-- Sección: Finanzas -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Información Financiera</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.precio_total.id_for_label }}">{{ form.precio_total.label }}</label>
+                            {{ form.precio_total }}
+                            {% if form.precio_total.errors %}<div class="field-error">{{ form.precio_total.errors|striptags }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.estado.id_for_label }}">{{ form.estado.label }}</label>
+                            {{ form.estado }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.porcentaje_anticipo.id_for_label }}">{{ form.porcentaje_anticipo.label }} (%)</label>
+                            {{ form.porcentaje_anticipo }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.monto_anticipo.id_for_label }}">{{ form.monto_anticipo.label }} (RD$)</label>
+                            {{ form.monto_anticipo }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Fechas -->
+                <div style="margin-bottom: 2rem;">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Fechas</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.fecha_contratacion.id_for_label }}">{{ form.fecha_contratacion.label }}</label>
+                            {{ form.fecha_contratacion }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.fecha_entrega_estimada.id_for_label }}">{{ form.fecha_entrega_estimada.label }}</label>
+                            {{ form.fecha_entrega_estimada }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center" style="padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <button class="btn btn-primary" type="submit">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>{{ accion }}</span>
+                    </button>
+                    <a class="btn btn-secondary" href="{% url 'proyecto_list' %}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

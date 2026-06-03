@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Proyectos</h1>
+        <p class="page-description">Gestión de proyectos de desarrollo y venta de software asignados a clientes.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'proyecto_create' %}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Nuevo Proyecto</span>
+    </a>
+</div>
+
+<!-- Search -->
+<form method="get" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 0.75rem; max-width: 480px;">
+        <input class="form-control" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o cliente…" style="flex: 1;" />
+        <button class="btn btn-primary" type="submit">Buscar</button>
+        {% if query %}<a class="btn btn-secondary" href="{% url 'proyecto_list' %}">Limpiar</a>{% endif %}
+    </div>
+</form>
+
+{% if proyectos %}
+<div class="card shadow-md">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive" style="border: none; box-shadow: none;">
+            <table class="table" style="margin: 0;">
+                <thead>
+                    <tr>
+                        <th>Proyecto</th>
+                        <th>Cliente</th>
+                        <th>Software</th>
+                        <th class="text-right">Precio Total</th>
+                        <th class="text-right">Anticipo</th>
+                        <th class="text-right">Saldo</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center" style="width: 100px;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proyecto in proyectos %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 700; color: var(--text-main);">{{ proyecto.nombre }}</div>
+                            <div class="text-muted" style="font-size: 0.82rem;">{{ proyecto.fecha_contratacion }}</div>
+                        </td>
+                        <td>
+                            <a href="{% url 'cliente_detail' proyecto.cliente.pk %}" style="font-weight: 600; color: var(--primary);">{{ proyecto.cliente.nombre }}</a>
+                        </td>
+                        <td class="text-muted">{{ proyecto.software.nombre|default:"—" }}</td>
+                        <td class="text-right" style="font-weight: 700;">RD$ {{ proyecto.precio_total|intcomma }}</td>
+                        <td class="text-right" style="color: var(--success); font-weight: 600;">RD$ {{ proyecto.monto_anticipo|intcomma }}</td>
+                        <td class="text-right" style="font-weight: 800; color: {% if proyecto.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">
+                            RD$ {{ proyecto.saldo_pendiente|intcomma }}
+                        </td>
+                        <td class="text-center">
+                            {% if proyecto.estado == 'PENDIENTE' %}
+                            <span class="badge badge-warning">Pendiente</span>
+                            {% elif proyecto.estado == 'DESARROLLO' %}
+                            <span class="badge" style="background: rgba(99,102,241,0.1); color: #6366f1;">En Desarrollo</span>
+                            {% elif proyecto.estado == 'PRUEBAS' %}
+                            <span class="badge badge-warning">En Pruebas</span>
+                            {% elif proyecto.estado == 'ENTREGADO' %}
+                            <span class="badge badge-success">Entregado</span>
+                            {% elif proyecto.estado == 'CANCELADO' %}
+                            <span class="badge badge-danger">Cancelado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'proyecto_detail' proyecto.pk %}" style="padding: 0.35rem 0.75rem;">Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-md">
+    <div class="card-body d-flex flex-column align-items-center justify-content-center" style="padding: 4rem 2rem; text-align: center;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">
+            {% if query %}No se encontraron proyectos{% else %}Sin proyectos registrados{% endif %}
+        </h3>
+        <p class="text-muted" style="max-width: 400px; margin-bottom: 1.5rem;">
+            {% if query %}Intente con otro término de búsqueda.{% else %}Registre el primer proyecto para comenzar a gestionarlo.{% endif %}
+        </p>
+        {% if not query %}<a class="btn btn-primary" href="{% url 'proyecto_create' %}">Crear Primer Proyecto</a>{% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

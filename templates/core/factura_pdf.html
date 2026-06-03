@@ -1,0 +1,331 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: letter;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .invoice-container {
+            padding: 0;
+        }
+
+        /* Header */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+            margin-bottom: 24px;
+        }
+
+        .company-info h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .company-info p {
+            margin: 0;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-meta .invoice-label {
+            font-size: 22px;
+            font-weight: 800;
+            color: #2563eb;
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .invoice-meta table {
+            margin-left: auto;
+        }
+
+        .invoice-meta table td {
+            padding: 2px 0;
+            font-size: 12px;
+        }
+
+        .invoice-meta table td:first-child {
+            font-weight: 700;
+            color: #475569;
+            padding-right: 12px;
+        }
+
+        /* Client Section */
+        .client-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+
+        .client-section h4 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+
+        .client-section p {
+            margin: 2px 0;
+            font-size: 13px;
+        }
+
+        .client-section .client-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Concept */
+        .concept-section {
+            margin-bottom: 24px;
+        }
+
+        .concept-section h4 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+
+        .concept-section p {
+            font-size: 14px;
+            color: #334155;
+            margin: 0;
+        }
+
+        /* Table */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        .invoice-table th {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 14px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            text-align: left;
+        }
+
+        .invoice-table th:last-child {
+            text-align: right;
+        }
+
+        .invoice-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+
+        .invoice-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .invoice-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Totals */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 32px;
+        }
+
+        .totals-table {
+            width: 280px;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+
+        .totals-table td:first-child {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .totals-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .totals-table .total-row td {
+            border-top: 2px solid #2563eb;
+            font-size: 16px;
+            font-weight: 800;
+            color: #2563eb;
+            padding-top: 12px;
+        }
+
+        .totals-table .total-row td:first-child {
+            color: #0f172a;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .signature-line {
+            width: 200px;
+            border-top: 1px solid #94a3b8;
+            padding-top: 6px;
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .footer-branding {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: right;
+        }
+
+        .footer-branding strong {
+            color: #475569;
+        }
+    </style>
+    <title>Factura {{ factura.numero }}</title>
+</head>
+
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-info">
+                <h1>DerejSoft</h1>
+                <p>Sistema Profesional de Facturación</p>
+                <p>Gestión y Venta de Software</p>
+            </div>
+            <div class="invoice-meta">
+                <div class="invoice-label">Factura</div>
+                <table>
+                    <tr>
+                        <td>Número:</td>
+                        <td>{{ factura.numero }}</td>
+                    </tr>
+                    <tr>
+                        <td>Fecha:</td>
+                        <td>{{ factura.fecha }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Client Info -->
+        <div class="client-section">
+            <h4>Facturado a</h4>
+            <p class="client-name">{{ factura.cliente.nombre }}</p>
+            <p>Cédula / RNC: {{ factura.cliente.cedula }}</p>
+            <p>Correo: {{ factura.cliente.correo }}</p>
+            {% if factura.cliente.direccion %}
+            <p>Dirección: {{ factura.cliente.direccion }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Concept -->
+        <div class="concept-section">
+            <h4>Concepto</h4>
+            <p>{{ factura.concepto }}</p>
+        </div>
+
+        <!-- Detail Table -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in factura.detalles.all %}
+                <tr>
+                    <td>{{ item.descripcion }}</td>
+                    <td>RD$ {{ item.total|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td>{{ factura.concepto }}</td>
+                    <td>RD$ {{ factura.monto|intcomma }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td>Subtotal:</td>
+                    <td>RD$ {{ factura.monto|intcomma }}</td>
+                </tr>
+                <tr>
+                    <td>Impuestos (ITBIS):</td>
+                    <td>RD$ {{ factura.impuestos|intcomma }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total:</td>
+                    <td>RD$ {{ factura.total|intcomma }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <div class="signature-line">
+                Firma Autorizada
+            </div>
+            <div class="footer-branding">
+                <strong>DerejSoft</strong><br>
+                Sistema de Facturación y Gestión<br>
+                de Venta de Software
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
