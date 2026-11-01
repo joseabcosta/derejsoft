@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Inventario de Sistemas</h1>
+        <p class="page-description">Catálogo e inventario de software disponible para venta, cotización y facturación.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'sistema_create' %}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Nuevo Sistema</span>
+    </a>
+</div>
+
+<!-- Resumen de Inventario -->
+<div class="grid-4" style="margin-bottom: 2rem;">
+    <div class="card card-accent-blue shadow-sm">
+        <div class="card-body">
+            <span class="card-subtitle">Total de Sistemas</span>
+            <div class="card-value">{{ sistemas.count }}</div>
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Sistemas en catálogo</p>
+        </div>
+    </div>
+    <div class="card shadow-sm" style="border-top: 4px solid var(--success);">
+        <div class="card-body">
+            <span class="card-subtitle">Valor del Inventario</span>
+            <div class="card-value" style="color: var(--success); font-size: 1.8rem;">RD$ {{ total_valor|intcomma }}</div>
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Suma del precio base registrado</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros y Búsqueda -->
+<form method="get" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 0.75rem; max-width: 650px; flex-wrap: wrap;">
+        <input class="form-control" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o descripción…" style="flex: 2; min-width: 200px;" />
+        <select class="form-control" name="categoria" style="flex: 1; min-width: 180px;">
+            <option value="">— Todas las Categorías —</option>
+            {% for code, label in categorias %}
+            <option value="{{ code }}" {% if categoria == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+        {% if query or categoria %}
+        <a class="btn btn-secondary" href="{% url 'sistema_list' %}">Limpiar</a>
+        {% endif %}
+    </div>
+</form>
+
+{% if sistemas %}
+<div class="card shadow-md">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive" style="border: none; box-shadow: none;">
+            <table class="table" style="margin: 0;">
+                <thead>
+                    <tr>
+                        <th>Sistema</th>
+                        <th>Categoría</th>
+                        <th>Descripción</th>
+                        <th class="text-right">Precio Base</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center" style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sistema in sistemas %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">{{ sistema.nombre }}</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">Registrado: {{ sistema.creado|date:"d/m/Y" }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-secondary" style="font-weight: 600;">{{ sistema.get_categoria_display }}</span>
+                        </td>
+                        <td class="text-muted" style="max-width: 320px;">
+                            {{ sistema.descripcion|default:"Sin descripción"|truncatechars:70 }}
+                        </td>
+                        <td class="text-right" style="font-weight: 800; color: var(--primary); font-size: 1.05rem;">
+                            RD$ {{ sistema.precio|intcomma }}
+                        </td>
+                        <td class="text-center">
+                            {% if sistema.estado == 'ACTIVO' %}
+                            <span class="badge badge-success">Activo</span>
+                            {% elif sistema.estado == 'DESARROLLO' %}
+                            <span class="badge badge-warning">En desarrollo</span>
+                            {% elif sistema.estado == 'DESCONTINUADO' %}
+                            <span class="badge badge-danger">Descontinuado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'sistema_edit' sistema.pk %}" style="padding: 0.35rem 0.75rem;">Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-md">
+    <div class="card-body d-flex flex-column align-items-center justify-content-center" style="padding: 4rem 2rem; text-align: center;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.35rem; color: var(--text-main); margin-bottom: 0.5rem;">
+            {% if query or categoria %}No se encontraron sistemas con esos filtros{% else %}Sin sistemas en inventario{% endif %}
+        </h3>
+        <p class="text-muted" style="max-width: 420px; margin-bottom: 1.5rem;">
+            {% if query or categoria %}Intente con otro término o retire el filtro de categoría.{% else %}Registre su primer sistema de software para armar su catálogo y calcular su valor total.{% endif %}
+        </p>
+        {% if not query and not categoria %}
+        <a class="btn btn-primary" href="{% url 'sistema_create' %}">Registrar Primer Sistema</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

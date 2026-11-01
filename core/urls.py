@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     abono_create,
+    abono_list,
+    abono_pdf,
     cliente_create,
     cliente_detail,
     cliente_edit,
@@ -17,7 +19,10 @@ from .views import (
     proyecto_detail,
     proyecto_edit,
     proyecto_list,
-    abono_pdf,
+    sistema_create,
+    sistema_detail,
+    sistema_edit,
+    sistema_list,
 )
 
 urlpatterns = [
@@ -30,7 +35,13 @@ urlpatterns = [
     path('clientes/<int:pk>/', cliente_detail, name='cliente_detail'),
     path('clientes/<int:pk>/editar/', cliente_edit, name='cliente_edit'),
 
-    # Proyectos
+    # Inventario de Sistemas
+    path('inventario/', sistema_list, name='sistema_list'),
+    path('inventario/nuevo/', sistema_create, name='sistema_create'),
+    path('inventario/<int:pk>/', sistema_detail, name='sistema_detail'),
+    path('inventario/<int:pk>/editar/', sistema_edit, name='sistema_edit'),
+
+    # Retrocompatibilidad para Proyectos
     path('proyectos/', proyecto_list, name='proyecto_list'),
     path('proyectos/nuevo/', proyecto_create, name='proyecto_create'),
     path('proyectos/<int:pk>/', proyecto_detail, name='proyecto_detail'),
@@ -46,5 +57,6 @@ urlpatterns = [
     path('cuentas/', cuenta_por_cobrar_list, name='cuenta_por_cobrar_list'),
     path('cuentas/<int:factura_pk>/abonar/', abono_create, name='abono_create'),
     path('cuentas/<int:factura_pk>/liquidar/', factura_liquidar, name='factura_liquidar'),
+    path('abonos/', abono_list, name='abono_list'),
     path('abonos/<int:pk>/pdf/', abono_pdf, name='abono_pdf'),
 ]

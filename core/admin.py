@@ -9,14 +9,12 @@ from .models import (
     Factura,
     MovimientoCaja,
     Pago,
-    Proyecto,
-    Software,
+    SistemaSoftware,
 )
 
 
 admin.site.register(Cliente)
-admin.site.register(Software)
-admin.site.register(Proyecto)
+admin.site.register(SistemaSoftware)
 admin.site.register(Factura)
 admin.site.register(DetalleFactura)
 admin.site.register(Pago)

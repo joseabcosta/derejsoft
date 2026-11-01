@@ -8,11 +8,11 @@
             <span>Volver al Historial</span>
         </a>
         <h1 class="page-title">Nueva Factura</h1>
-        <p class="page-description">Complete el formulario para generar un nuevo documento fiscal en el sistema.</p>
+        <p class="page-description">Genere un nuevo documento fiscal al contado o a crédito.</p>
     </div>
 </div>
 
-<div class="form-card">
+<div class="form-card" style="max-width: 780px;">
     <div class="card shadow-md">
         <div class="card-body" style="padding: 2.5rem;">
             <div class="d-flex align-items-center gap-3 mb-4" style="padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
@@ -20,58 +20,111 @@
                     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                 </div>
                 <div>
-                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">Datos de la Factura</h3>
-                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">Complete todos los campos del documento fiscal.</p>
+                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">Datos de Facturación</h3>
+                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">Seleccione la condición de pago para definir el cliente.</p>
                 </div>
             </div>
 
             <form method="post" novalidate>
                 {% csrf_token %}
-                {{ form.non_field_errors }}
+                {% if form.non_field_errors %}
+                <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
 
-                <!-- Cliente y Proyecto -->
+                <!-- Condición de Pago y Cliente -->
                 <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
-                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Asignación</p>
-                    <div class="grid-2">
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Condición de Venta y Cliente</p>
+                    
+                    <div class="grid-2" style="margin-bottom: 1rem;">
                         <div class="form-group">
-                            <label class="form-label" for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
-                            {{ form.cliente }}
-                            {% if form.cliente.errors %}<div class="field-error">{{ form.cliente.errors|striptags }}</div>{% endif %}
+                            <label class="form-label" for="{{ form.condicion_pago.id_for_label }}">{{ form.condicion_pago.label }}</label>
+                            {{ form.condicion_pago }}
+                            {% if form.condicion_pago.errors %}<div class="field-error">{{ form.condicion_pago.errors|striptags }}</div>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ form.proyecto.id_for_label }}">{{ form.proyecto.label }}</label>
-                            {{ form.proyecto }}
+                            <label class="form-label" for="{{ form.metodo_pago.id_for_label }}">{{ form.metodo_pago.label }}</label>
+                            {{ form.metodo_pago }}
+                            {% if form.metodo_pago.errors %}<div class="field-error">{{ form.metodo_pago.errors|striptags }}</div>{% endif %}
                         </div>
+                    </div>
+
+                    <!-- Cliente Al Contado: solo pide el nombre -->
+                    <div class="form-group" id="cliente_contado_container">
+                        <label class="form-label" for="{{ form.nombre_cliente.id_for_label }}">
+                            Nombre del Cliente (Venta al Contado) <span style="color: var(--danger);">*</span>
+                        </label>
+                        {{ form.nombre_cliente }}
+                        {% if form.nombre_cliente.errors %}<div class="field-error">{{ form.nombre_cliente.errors|striptags }}</div>{% endif %}
+                        <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Escriba el nombre del cliente o empresa sin necesidad de registrarlo en la base de datos.</p>
+                    </div>
+
+                    <!-- Cliente A Crédito: requiere elegir cliente registrado -->
+                    <div class="form-group" id="cliente_credito_container" style="display: none;">
+                        <label class="form-label" for="{{ form.cliente.id_for_label }}">
+                            Cliente Registrado (Venta a Crédito) <span style="color: var(--danger);">*</span>
+                        </label>
+                        {{ form.cliente }}
+                        {% if form.cliente.errors %}<div class="field-error">{{ form.cliente.errors|striptags }}</div>{% endif %}
+                        <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Para facturar a crédito y llevar el control de deuda y abonos, elija un cliente registrado.</p>
+                    </div>
+
+                    <!-- Cuota Fija si es a crédito -->
+                    <div class="form-group" id="cuota_fija_container" style="display: none; margin-top: 1rem;">
+                        <label class="form-label" for="{{ form.cuota_fija.id_for_label }}">Monto de Cuota Fija para Abonos (RD$)</label>
+                        {{ form.cuota_fija }}
+                        {% if form.cuota_fija.errors %}<div class="field-error">{{ form.cuota_fija.errors|striptags }}</div>{% endif %}
+                        <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Opcional: Si establece una cuota fija, los abonos sugerirán este valor por defecto.</p>
                     </div>
                 </div>
 
+                <!-- Cargar desde Inventario (Opcional) -->
+                {% if sistemas %}
+                <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--bg-app); border: 1px dashed var(--border); border-radius: var(--radius-md);">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        <span>Cargar datos desde Inventario (Opcional)</span>
+                    </label>
+                    <select id="selector_inventario" class="form-control">
+                        <option value="">— Seleccionar un sistema del catálogo para autocompletar —</option>
+                        {% for s in sistemas %}
+                        <option value="{{ s.id }}" data-nombre="{{ s.nombre }}" data-precio="{{ s.precio }}" data-desc="{{ s.descripcion }}">
+                            {{ s.nombre }} — RD$ {{ s.precio }} ({{ s.get_categoria_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">
+                        Al elegir un sistema se completarán el concepto y el monto. <strong>Puede modificar el precio aquí libremente sin afectar el valor del inventario.</strong>
+                    </p>
+                </div>
+                {% endif %}
+
                 <!-- Datos del documento -->
                 <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
-                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Datos del Documento</p>
+                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Detalle del Documento Fiscal</p>
+                    
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label" for="{{ form.numero.id_for_label }}">Número de Factura <span class="text-muted" style="font-weight: 400;">(opcional)</span></label>
                             {{ form.numero }}
-                            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Si lo deja vacío, se genera automáticamente.</p>
+                            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.35rem;">Si lo deja vacío se autogenera (ej: INV-202609...)</p>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ form.fecha.id_for_label }}">{{ form.fecha.label }}</label>
+                            <label class="form-label" for="{{ form.fecha.id_for_label }}">Fecha de Emisión</label>
                             {{ form.fecha }}
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label" for="{{ form.concepto.id_for_label }}">{{ form.concepto.label }}</label>
+                        <label class="form-label" for="{{ form.concepto.id_for_label }}">Concepto / Descripción del Sistema o Servicio</label>
                         {{ form.concepto }}
                         {% if form.concepto.errors %}<div class="field-error">{{ form.concepto.errors|striptags }}</div>{% endif %}
                     </div>
-                </div>
 
-                <!-- Montos -->
-                <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
-                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Montos</p>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label" for="{{ form.monto.id_for_label }}">Monto (RD$)</label>
+                            <label class="form-label" for="{{ form.monto.id_for_label }}">Monto a Facturar (RD$)</label>
                             {{ form.monto }}
                             {% if form.monto.errors %}<div class="field-error">{{ form.monto.errors|striptags }}</div>{% endif %}
                         </div>
@@ -82,25 +135,10 @@
                     </div>
                 </div>
 
-                <!-- Condición y Método de Pago -->
-                <div style="margin-bottom: 2rem;">
-                    <p style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 1rem;">Condición y Método de Pago</p>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="{{ form.condicion_pago.id_for_label }}">{{ form.condicion_pago.label }}</label>
-                            {{ form.condicion_pago }}
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="{{ form.metodo_pago.id_for_label }}">{{ form.metodo_pago.label }}</label>
-                            {{ form.metodo_pago }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-3 align-items-center" style="padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                <div class="d-flex gap-3 align-items-center" style="padding-top: 1.5rem;">
                     <button class="btn btn-primary" type="submit">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>Registrar Factura</span>
+                        <span>Emitir Factura</span>
                     </button>
                     <a class="btn btn-secondary" href="{% url 'factura_list' %}">Cancelar</a>
                 </div>
@@ -108,4 +146,54 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var condicionSelect = document.getElementById("id_condicion_pago");
+        var contadoContainer = document.getElementById("cliente_contado_container");
+        var creditoContainer = document.getElementById("cliente_credito_container");
+        var cuotaFijaContainer = document.getElementById("cuota_fija_container");
+        var selectorInventario = document.getElementById("selector_inventario");
+        var conceptoInput = document.getElementById("{{ form.concepto.id_for_label }}");
+        var montoInput = document.getElementById("{{ form.monto.id_for_label }}");
+        var cuotaFijaInput = document.getElementById("{{ form.cuota_fija.id_for_label }}");
+
+        function updateFormByCondicion() {
+            var val = condicionSelect ? condicionSelect.value : 'CONTADO';
+            if (val === 'CREDITO') {
+                creditoContainer.style.display = 'block';
+                contadoContainer.style.display = 'none';
+                cuotaFijaContainer.style.display = 'block';
+            } else {
+                creditoContainer.style.display = 'none';
+                contadoContainer.style.display = 'block';
+                cuotaFijaContainer.style.display = 'none';
+                if (cuotaFijaInput) cuotaFijaInput.value = '0';
+            }
+        }
+
+        if (condicionSelect) {
+            condicionSelect.addEventListener('change', updateFormByCondicion);
+            updateFormByCondicion();
+        }
+
+        if (selectorInventario) {
+            selectorInventario.addEventListener('change', function() {
+                var selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    var nombre = selectedOption.getAttribute('data-nombre');
+                    var precio = selectedOption.getAttribute('data-precio');
+                    if (conceptoInput && !conceptoInput.value) {
+                        conceptoInput.value = nombre;
+                    } else if (conceptoInput) {
+                        conceptoInput.value = nombre;
+                    }
+                    if (montoInput) {
+                        montoInput.value = parseFloat(precio).toFixed(2);
+                    }
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

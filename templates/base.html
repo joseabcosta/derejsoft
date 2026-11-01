@@ -672,13 +672,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo-container">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
-                        <line x1="12" y1="22" x2="12" y2="15.5"></line>
-                        <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
-                        <polyline points="2 15.5 12 8.5 22 15.5"></polyline>
-                        <line x1="12" y1="2" x2="12" y2="8.5"></line>
-                    </svg>
+                    <img src="/static/img/logo.png" alt="Logo DerejSoft" style="width: 42px; height: 42px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.25);">
                     <h4>DerejSoft</h4>
                 </div>
                 <p>Sistema Inteligente de Facturación y Venta de Software</p>
@@ -704,10 +698,10 @@
                     <span>Registrar Cliente</span>
                 </a>
                 
-                <!-- Proyectos -->
-                <a class="nav-link {% if 'proyecto' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'proyecto_list' %}">
+                <!-- Inventario de Sistemas -->
+                <a class="nav-link {% if 'sistema' in request.resolver_match.url_name or 'proyecto' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'sistema_list' %}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-                    <span>Proyectos</span>
+                    <span>Inventario Sistemas</span>
                 </a>
 
                 <!-- Facturación -->
@@ -724,8 +718,12 @@
                 
                 <!-- Cuentas por cobrar -->
                 <a class="nav-link {% if request.resolver_match.url_name == 'cuenta_por_cobrar_list' %}active{% endif %}" href="{% url 'cuenta_por_cobrar_list' %}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                    <span>Cuentas por cobrar</span>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <span>Cuentas por Cobrar</span>
+                </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'abono_list' %}active{% endif %}" href="{% url 'abono_list' %}">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>Historial Recibos</span>
                 </a>
                 
                 <!-- Cerrar Sesión -->
@@ -770,6 +768,57 @@
         </main>
     </div>
     {% block scripts %}{% endblock %}
+
+    <script>
+    /**
+     * Protección global anti-doble envío:
+     * - Al enviar cualquier formulario, deshabilita inmediatamente el botón submit
+     * - Muestra texto de "Guardando…" para feedback visual
+     * - Si el usuario regresa atrás (botón back), rehabilita los botones para evitar el
+     *   aviso del navegador de "¿Reenviar datos del formulario?"
+     */
+    (function () {
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!form || form.tagName !== 'FORM') return;
+            // No bloquear formularios de búsqueda (GET)
+            if (form.method && form.method.toUpperCase() === 'GET') return;
+
+            var submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitBtns.forEach(function (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.65';
+                btn.style.cursor = 'not-allowed';
+                // Guardar texto original y mostrar indicador
+                if (!btn.dataset.originalText) {
+                    btn.dataset.originalText = btn.innerHTML;
+                }
+                btn.innerHTML = '<svg style="animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Guardando…';
+            });
+        });
+
+        // Rehabilitar botones si el usuario regresa con el botón Atrás del navegador
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                document.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                    btn.style.cursor = '';
+                    if (btn.dataset.originalText) {
+                        btn.innerHTML = btn.dataset.originalText;
+                    }
+                });
+            }
+        });
+    })();
+
+    /* CSS para la animación del spinner */
+    (function() {
+        var style = document.createElement('style');
+        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    })();
+    </script>
 </body>
 
 </html>

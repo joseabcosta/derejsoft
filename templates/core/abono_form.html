@@ -8,8 +8,8 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             <span>Volver a Cuentas por Cobrar</span>
         </a>
-        <h1 class="page-title">Registrar Abono</h1>
-        <p class="page-description">Ingrese el monto del pago parcial para la factura indicada.</p>
+        <h1 class="page-title">{% if is_liquidar %}Registrar Pago Completo{% else %}Registrar Abono{% endif %}</h1>
+        <p class="page-description">{% if is_liquidar %}Liquidación del saldo pendiente para esta factura.{% else %}Ingrese el monto del pago parcial para la factura indicada.{% endif %}</p>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
             </div>
             <div>
                 <span class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 0.2rem;">Cliente</span>
-                <span style="font-weight: 700;">{{ factura.cliente.nombre }}</span>
+                <span style="font-weight: 700;">{{ factura.get_nombre_cliente }}</span>
             </div>
             <div>
                 <span class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 0.2rem;">Total Factura</span>
@@ -51,8 +51,8 @@
                     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                 </div>
                 <div>
-                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">Nuevo Abono</h3>
-                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">El abono se registrará y el saldo será actualizado automáticamente.</p>
+                    <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">{% if is_liquidar %}Liquidación de Deuda{% else %}Nuevo Abono{% endif %}</h3>
+                    <p class="text-muted" style="margin: 0; font-size: 0.88rem;">{% if is_liquidar %}El monto está bloqueado al saldo pendiente exacto.{% else %}El abono se registrará y el saldo será actualizado automáticamente.{% endif %}</p>
                 </div>
             </div>
 
@@ -81,7 +81,7 @@
                 <div class="d-flex gap-3 align-items-center" style="padding-top: 1.5rem; border-top: 1px solid var(--border);">
                     <button class="btn btn-primary" type="submit">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>Confirmar Abono</span>
+                        <span>{% if is_liquidar %}Confirmar Pago Completo{% else %}Confirmar Abono{% endif %}</span>
                     </button>
                     <a class="btn btn-secondary" href="{% url 'cuenta_por_cobrar_list' %}">Cancelar</a>
                 </div>
@@ -89,4 +89,19 @@
         </div>
     </div>
 </div>
+
+{% if is_liquidar %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var montoField = document.getElementById("{{ form.monto.id_for_label }}");
+        if (montoField) {
+            montoField.readOnly = true;
+            montoField.style.backgroundColor = 'var(--bg-light)';
+            montoField.style.cursor = 'not-allowed';
+            montoField.style.opacity = '0.8';
+        }
+    });
+</script>
+{% endif %}
+
 {% endblock %}

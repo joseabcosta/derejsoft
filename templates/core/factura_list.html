@@ -60,9 +60,13 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; flex-shrink: 0;">
-                                {{ factura.cliente.nombre|slice:":1"|upper }}
+                                {{ factura.get_nombre_cliente|slice:":1"|upper }}
                             </div>
+                            {% if factura.cliente %}
                             <a href="{% url 'cliente_detail' factura.cliente.pk %}" style="font-weight: 600; color: var(--text-main);">{{ factura.cliente.nombre }}</a>
+                            {% else %}
+                            <span style="font-weight: 600; color: var(--text-main);">{{ factura.nombre_cliente }}</span>
+                            {% endif %}
                         </div>
                     </td>
                     <td class="text-muted" style="font-size: 0.88rem;">{{ factura.fecha }}</td>

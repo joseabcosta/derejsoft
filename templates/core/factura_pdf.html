@@ -236,10 +236,13 @@
     <div class="invoice-container">
         <!-- Header -->
         <div class="invoice-header">
-            <div class="company-info">
-                <h1>DerejSoft</h1>
-                <p>Sistema Profesional de Facturación</p>
-                <p>Gestión y Venta de Software</p>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <img src="static/img/logo.png" alt="Logo" style="width: 55px; height: 55px; border-radius: 6px; object-fit: cover;">
+                <div class="company-info">
+                    <h1>DerejSoft</h1>
+                    <p>Sistema Profesional de Facturación</p>
+                    <p>Gestión y Venta de Software</p>
+                </div>
             </div>
             <div class="invoice-meta">
                 <div class="invoice-label">Factura</div>
@@ -259,11 +262,15 @@
         <!-- Client Info -->
         <div class="client-section">
             <h4>Facturado a</h4>
-            <p class="client-name">{{ factura.cliente.nombre }}</p>
+            <p class="client-name">{{ factura.get_nombre_cliente }}</p>
+            {% if factura.cliente %}
             <p>Cédula / RNC: {{ factura.cliente.cedula }}</p>
             <p>Correo: {{ factura.cliente.correo }}</p>
             {% if factura.cliente.direccion %}
             <p>Dirección: {{ factura.cliente.direccion }}</p>
+            {% endif %}
+            {% else %}
+            <p>Condición: Venta al Contado</p>
             {% endif %}
         </div>
 

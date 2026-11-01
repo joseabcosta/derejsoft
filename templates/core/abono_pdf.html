@@ -1,6 +1,7 @@
 {% load humanize %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Recibo de Abono #{{ abono.pk }}</title>
@@ -9,12 +10,14 @@
             size: A4;
             margin: 2cm;
         }
+
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333;
             line-height: 1.5;
             font-size: 14px;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -23,48 +26,58 @@
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
+
         .company-info {
             text-align: right;
         }
+
         .company-info h2 {
             margin: 0;
             color: #2563eb;
             font-size: 24px;
         }
+
         .company-info p {
             margin: 5px 0 0;
             color: #666;
         }
+
         .receipt-title {
             font-size: 28px;
             color: #1e293b;
             margin: 0 0 10px;
             font-weight: bold;
         }
+
         .receipt-meta {
             color: #64748b;
             font-size: 14px;
         }
+
         .client-section {
             background-color: #f8fafc;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 30px;
         }
+
         .client-section h3 {
             margin-top: 0;
             margin-bottom: 10px;
             color: #1e293b;
             font-size: 16px;
         }
+
         .client-section p {
             margin: 5px 0;
         }
+
         .financial-summary {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
         }
+
         .financial-summary th {
             background-color: #f1f5f9;
             color: #475569;
@@ -73,19 +86,23 @@
             font-weight: bold;
             border-bottom: 2px solid #e2e8f0;
         }
+
         .financial-summary td {
             padding: 15px 12px;
             border-bottom: 1px solid #e2e8f0;
         }
+
         .financial-summary .amount {
             text-align: right;
             font-weight: bold;
         }
+
         .total-row td {
             font-size: 16px;
             color: #10b981;
             background-color: rgba(16, 185, 129, 0.05);
         }
+
         .footer {
             margin-top: 50px;
             text-align: center;
@@ -96,31 +113,35 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div>
             <h1 class="receipt-title">RECIBO DE PAGO</h1>
             <div class="receipt-meta">
                 <div><strong>No. Recibo:</strong> {{ abono.pk|stringformat:"06d" }}</div>
-                <div><strong>Fecha:</strong> {{ abono.fecha|date:"d/m/Y H:i" }}</div>
+                <div><strong>Fecha:</strong> {{ abono.fecha|date:"d/m/Y" }}</div>
                 <div><strong>Referencia Factura:</strong> {{ abono.factura.numero }}</div>
+                {% if abono.comentario %}
+                <div><strong>Comentario:</strong> {{ abono.comentario }}</div>
+                {% endif %}
             </div>
         </div>
-        <div class="company-info">
-            <!-- Logo Placeholder -->
-            <div style="font-size: 32px; font-weight: 800; color: #2563eb; letter-spacing: -1px; margin-bottom: 5px;">
-                DerejSoft
+        <div class="company-info" style="text-align: right;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 6px;">
+                <img src="static/img/logo.png" alt="Logo" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;">
+                <span style="font-size: 26px; font-weight: 800; color: #2563eb; letter-spacing: -1px;">DerejSoft</span>
             </div>
-            <p><strong>Teléfono:</strong> (809) 555-0199</p>
+            <p><strong>Teléfono:</strong> (829) 477-2269</p>
             <p><strong>Email:</strong> contacto@derejsoft.com</p>
         </div>
     </div>
 
     <div class="client-section">
         <h3>RECIBÍ DE:</h3>
-        <p><strong>{{ abono.cliente.nombre }}</strong></p>
-        {% if abono.cliente.email %}<p>Email: {{ abono.cliente.email }}</p>{% endif %}
-        {% if abono.cliente.telefono %}<p>Tel: {{ abono.cliente.telefono }}</p>{% endif %}
+        <p><strong>{{ abono.factura.get_nombre_cliente }}</strong></p>
+        {% if abono.cliente.correo %}<p>Email: {{ abono.cliente.correo }}</p>{% endif %}
+        {% if abono.cliente.telefono_principal %}<p>Tel: {{ abono.cliente.telefono_principal }}</p>{% endif %}
     </div>
 
     <table class="financial-summary">
@@ -143,11 +164,12 @@
                 <td style="color: {% if cpc and cpc.saldo_pendiente > 0 %}#ef4444{% else %}#10b981{% endif %};">
                     <strong>Saldo Pendiente Restante</strong>
                 </td>
-                <td class="amount" style="color: {% if cpc and cpc.saldo_pendiente > 0 %}#ef4444{% else %}#10b981{% endif %};">
+                <td class="amount"
+                    style="color: {% if cpc and cpc.saldo_pendiente > 0 %}#ef4444{% else %}#10b981{% endif %};">
                     {% if cpc %}
-                        <strong>RD$ {{ cpc.saldo_pendiente|intcomma }}</strong>
+                    <strong>RD$ {{ cpc.saldo_pendiente|intcomma }}</strong>
                     {% else %}
-                        <strong>RD$ 0.00</strong>
+                    <strong>RD$ 0.00</strong>
                     {% endif %}
                 </td>
             </tr>
@@ -165,4 +187,5 @@
         <p>DerejSoft - Sistema Inteligente de Facturación</p>
     </div>
 </body>
+
 </html>

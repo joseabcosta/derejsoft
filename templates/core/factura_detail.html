@@ -9,7 +9,7 @@
             <span>Volver al Historial</span>
         </a>
         <h1 class="page-title">Factura {{ factura.numero }}</h1>
-        <p class="page-description">Detalles completos del documento fiscal — {{ factura.cliente.nombre }}</p>
+        <p class="page-description">Detalles completos del documento fiscal — {{ factura.get_nombre_cliente }}</p>
     </div>
     <div class="d-flex gap-2">
         <a class="btn btn-secondary" href="{% url 'factura_pdf' factura.pk %}">
@@ -45,12 +45,14 @@
                 <span class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 0.2rem;">Fecha</span>
                 <span style="font-weight: 700; font-size: 0.92rem;">{{ factura.fecha }}</span>
             </div>
-            {% if factura.proyecto %}
             <div>
-                <span class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 0.2rem;">Proyecto</span>
-                <a href="{% url 'proyecto_detail' factura.proyecto.pk %}" style="font-weight: 700; color: var(--primary); font-size: 0.92rem;">{{ factura.proyecto.nombre }}</a>
+                <span class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 0.2rem;">Cliente</span>
+                {% if factura.cliente %}
+                <a href="{% url 'cliente_detail' factura.cliente.pk %}" style="font-weight: 700; color: var(--primary); font-size: 0.92rem;">{{ factura.cliente.nombre }}</a>
+                {% else %}
+                <span style="font-weight: 700; font-size: 0.92rem;">{{ factura.nombre_cliente }}</span>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </div>

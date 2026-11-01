@@ -2,6 +2,8 @@ from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Sum
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 
@@ -36,62 +38,38 @@ class Cliente(models.Model):
         return Pago.objects.filter(cliente=self).aggregate(total=Sum('monto_pagado'))['total'] or 0
 
 
-class Software(models.Model):
-    TIPO_CHOICES = [
+class SistemaSoftware(models.Model):
+    """Inventario de sistemas/productos de software ofrecidos."""
+    CATEGORIAS = [
         ('FACTURACION', 'Sistema de facturación'),
+        ('GESTION', 'Sistema de gestión'),
+        ('CITAS', 'Sistema de citas'),
+        ('TIENDA', 'Tienda virtual'),
         ('PRESTAMOS', 'Sistema de préstamos'),
         ('RESTAURANTES', 'Sistema de restaurantes'),
-        ('TIENDA', 'Tiendas virtuales'),
         ('PERSONALIZADO', 'Aplicación personalizada'),
     ]
+    ESTADO_CHOICES = [
+        ('ACTIVO', 'Activo'),
+        ('DESARROLLO', 'En desarrollo'),
+        ('DESCONTINUADO', 'Descontinuado'),
+    ]
 
-    nombre = models.CharField(max_length=150)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='PERSONALIZADO')
-    descripcion = models.TextField(blank=True)
-    precio = models.DecimalField(max_digits=12, decimal_places=2)
+    nombre = models.CharField(max_length=180, verbose_name='Nombre del sistema')
+    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='PERSONALIZADO', verbose_name='Categoría')
+    descripcion = models.TextField(blank=True, verbose_name='Descripción')
+    precio = models.DecimalField(max_digits=12, decimal_places=2, verbose_name='Precio (RD$)')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='ACTIVO', verbose_name='Estado')
     creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Software'
-        verbose_name_plural = 'Software'
+        verbose_name = 'Sistema de Software'
+        verbose_name_plural = 'Inventario de Sistemas'
+        ordering = ['nombre']
 
     def __str__(self):
         return self.nombre
-
-
-class Proyecto(models.Model):
-    ESTADO_PROYECTO = [
-        ('PENDIENTE', 'Pendiente'),
-        ('DESARROLLO', 'En desarrollo'),
-        ('PRUEBAS', 'En pruebas'),
-        ('ENTREGADO', 'Entregado'),
-        ('CANCELADO', 'Cancelado'),
-    ]
-
-    cliente = models.ForeignKey(Cliente, related_name='proyectos', on_delete=models.CASCADE)
-    software = models.ForeignKey(Software, null=True, blank=True, on_delete=models.SET_NULL)
-    nombre = models.CharField(max_length=180, verbose_name='Nombre del proyecto')
-    descripcion = models.TextField(verbose_name='Descripción del proyecto')
-    precio_total = models.DecimalField(max_digits=12, decimal_places=2, verbose_name='Precio total')
-    fecha_contratacion = models.DateField(default=timezone.now, verbose_name='Fecha de contratación')
-    fecha_entrega_estimada = models.DateField(null=True, blank=True, verbose_name='Fecha estimada de entrega')
-    estado = models.CharField(max_length=20, choices=ESTADO_PROYECTO, default='PENDIENTE')
-    porcentaje_anticipo = models.DecimalField(max_digits=5, decimal_places=2,
-                                              default=0, verbose_name='Porcentaje de adelanto')
-    monto_anticipo = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Monto adelantado')
-    saldo_pendiente = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Saldo pendiente')
-    creado = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = 'Proyecto'
-        verbose_name_plural = 'Proyectos'
-
-    def save(self, *args, **kwargs):
-        self.saldo_pendiente = max(self.precio_total - self.monto_anticipo, 0)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.nombre} - {self.cliente.nombre}"
 
 
 class Factura(models.Model):
@@ -105,22 +83,35 @@ class Factura(models.Model):
         ('CHEQUE', 'Cheque'),
     ]
 
-    cliente = models.ForeignKey(Cliente, related_name='facturas', on_delete=models.CASCADE)
-    proyecto = models.ForeignKey(Proyecto, null=True, blank=True, related_name='facturas', on_delete=models.SET_NULL)
+    # Cliente vinculado (solo para crédito) o nombre libre (contado)
+    cliente = models.ForeignKey(Cliente, related_name='facturas', on_delete=models.CASCADE,
+                                null=True, blank=True, verbose_name='Cliente (crédito)')
+    nombre_cliente = models.CharField(max_length=200, blank=True, verbose_name='Nombre del cliente')
+
     numero = models.CharField(max_length=30, unique=True)
     fecha = models.DateField(default=timezone.now)
     concepto = models.CharField(max_length=255)
     monto = models.DecimalField(max_digits=12, decimal_places=2)
     impuestos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=12, decimal_places=2, editable=False, default=0)
-    condicion_pago = models.CharField(max_length=10, choices=CONDICION_CHOICES, default='CONTADO', verbose_name='Condición de pago')
-    metodo_pago = models.CharField(max_length=20, choices=METODO_CHOICES, default='EFECTIVO', verbose_name='Método de pago')
+    condicion_pago = models.CharField(max_length=10, choices=CONDICION_CHOICES, default='CONTADO',
+                                      verbose_name='Condición de pago')
+    metodo_pago = models.CharField(max_length=20, choices=METODO_CHOICES, default='EFECTIVO',
+                                   verbose_name='Método de pago')
+    cuota_fija = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                     verbose_name='Monto de cuota fija (RD$)')
     is_active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = 'Factura'
         verbose_name_plural = 'Facturas'
         ordering = ['-fecha']
+
+    def get_nombre_cliente(self):
+        """Retorna el nombre del cliente sin importar si es vínculo o texto."""
+        if self.cliente:
+            return self.cliente.nombre
+        return self.nombre_cliente or '—'
 
     def save(self, *args, **kwargs):
         self.total = self.monto + self.impuestos
@@ -147,7 +138,7 @@ class Factura(models.Model):
 
     def actualizar_cuenta_por_cobrar(self):
         CuentaPorCobrar = apps.get_model('core', 'CuentaPorCobrar')
-        if self.is_active and self.condicion_pago == 'CREDITO':
+        if self.is_active and self.condicion_pago == 'CREDITO' and self.cliente:
             total_abonado = self.total_pagos_y_abonos()
             cpc, created = CuentaPorCobrar.objects.get_or_create(
                 factura=self,
@@ -222,7 +213,8 @@ class Abono(models.Model):
     factura = models.ForeignKey(Factura, related_name='abonos', on_delete=models.CASCADE)
     cliente = models.ForeignKey(Cliente, related_name='abonos', on_delete=models.CASCADE)
     monto = models.DecimalField(max_digits=12, decimal_places=2)
-    fecha = models.DateTimeField(auto_now_add=True)
+    comentario = models.CharField(max_length=255, blank=True, verbose_name='Comentario o Referencia')
+    fecha = models.DateField(default=timezone.now, verbose_name='Fecha del pago')
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='abonos', on_delete=models.SET_NULL, null=True)
 
     class Meta:
@@ -241,6 +233,24 @@ class Abono(models.Model):
         factura = self.factura
         super().delete(*args, **kwargs)
         factura.actualizar_cuenta_por_cobrar()
+
+
+@receiver(post_delete, sender=Abono)
+def on_abono_deleted(sender, instance, **kwargs):
+    if instance.factura_id:
+        try:
+            instance.factura.actualizar_cuenta_por_cobrar()
+        except Exception:
+            pass
+
+
+@receiver(post_delete, sender=Pago)
+def on_pago_deleted(sender, instance, **kwargs):
+    if instance.factura_id:
+        try:
+            instance.factura.actualizar_cuenta_por_cobrar()
+        except Exception:
+            pass
 
 
 class CuentaPorCobrar(models.Model):

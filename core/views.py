@@ -9,8 +9,8 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from weasyprint import HTML
 
-from .forms import AbonoForm, ClienteForm, FacturaForm, ProyectoForm
-from .models import Abono, Cliente, CuentaPorCobrar, Factura, Pago, Proyecto
+from .forms import AbonoForm, ClienteForm, FacturaForm, SistemaSoftwareForm
+from .models import Abono, Cliente, CuentaPorCobrar, Factura, Pago, SistemaSoftware
 
 
 # ─────────────────────────────────────────────
@@ -24,7 +24,7 @@ def dashboard(request):
     ventas_mes = Factura.objects.filter(fecha__month=today.month, is_active=True).aggregate(total=Sum('total'))['total'] or 0
     ventas_ano = Factura.objects.filter(fecha__year=today.year, is_active=True).aggregate(total=Sum('total'))['total'] or 0
     total_clientes = Cliente.objects.count()
-    total_proyectos = Proyecto.objects.count()
+    total_sistemas = SistemaSoftware.objects.count()
     cuentas_por_cobrar = CuentaPorCobrar.objects.aggregate(total=Sum('saldo_pendiente'))['total'] or 0
     pagos_recibidos = Pago.objects.aggregate(total=Sum('monto_pagado'))['total'] or 0
     cuentas_por_cobrar_este_ano = CuentaPorCobrar.objects.filter(
@@ -55,7 +55,8 @@ def dashboard(request):
         'ventas_mes': ventas_mes,
         'ventas_ano': ventas_ano,
         'total_clientes': total_clientes,
-        'total_proyectos': total_proyectos,
+        'total_sistemas': total_sistemas,
+        'total_proyectos': total_sistemas,
         'cuentas_por_cobrar': cuentas_por_cobrar,
         'pagos_recibidos': pagos_recibidos,
         'balance_general': balance_general,
@@ -122,76 +123,87 @@ def cliente_detail(request, pk):
     pagos = cliente.pagos.all().order_by('-fecha')
     abonos = Abono.objects.filter(cliente=cliente).order_by('-fecha')
     saldo_pendiente = cliente.total_deuda()
-    proyectos = cliente.proyectos.all().order_by('-fecha_contratacion')
     return render(request, 'core/cliente_detail.html', {
         'cliente': cliente,
         'facturas': facturas,
         'pagos': pagos,
         'abonos': abonos,
         'saldo_pendiente': saldo_pendiente,
-        'proyectos': proyectos,
     })
 
 
 # ─────────────────────────────────────────────
-#  PROYECTOS
+#  INVENTARIO DE SISTEMAS
 # ─────────────────────────────────────────────
 
 @login_required
-def proyecto_list(request):
+def sistema_list(request):
     query = request.GET.get('q', '')
-    proyectos = Proyecto.objects.select_related('cliente', 'software').all()
+    categoria = request.GET.get('categoria', '')
+    sistemas = SistemaSoftware.objects.all()
     if query:
-        proyectos = proyectos.filter(
-            Q(nombre__icontains=query) | Q(cliente__nombre__icontains=query)
+        sistemas = sistemas.filter(
+            Q(nombre__icontains=query) | Q(descripcion__icontains=query)
         )
-    return render(request, 'core/proyecto_list.html', {'proyectos': proyectos, 'query': query})
+    if categoria:
+        sistemas = sistemas.filter(categoria=categoria.upper())
+    total_valor = sistemas.aggregate(total=Sum('precio'))['total'] or 0
+    return render(request, 'core/sistema_list.html', {
+        'sistemas': sistemas,
+        'query': query,
+        'categoria': categoria,
+        'total_valor': total_valor,
+        'categorias': SistemaSoftware.CATEGORIAS,
+    })
 
 
 @login_required
-def proyecto_create(request):
+def sistema_create(request):
     if request.method == 'POST':
-        form = ProyectoForm(request.POST)
+        form = SistemaSoftwareForm(request.POST)
+        if form.is_valid():
+            sistema = form.save()
+            messages.success(request, f'Sistema "{sistema.nombre}" registrado en inventario.')
+            return redirect('sistema_list')
+    else:
+        form = SistemaSoftwareForm()
+    return render(request, 'core/sistema_form.html', {
+        'form': form,
+        'titulo': 'Nuevo Sistema en Inventario',
+        'accion': 'Registrar en Inventario',
+    })
+
+
+@login_required
+def sistema_edit(request, pk):
+    sistema = get_object_or_404(SistemaSoftware, pk=pk)
+    if request.method == 'POST':
+        form = SistemaSoftwareForm(request.POST, instance=sistema)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Proyecto registrado exitosamente.')
-            return redirect('proyecto_list')
+            messages.success(request, f'Sistema "{sistema.nombre}" actualizado correctamente.')
+            return redirect('sistema_list')
     else:
-        form = ProyectoForm()
-    return render(request, 'core/proyecto_form.html', {
+        form = SistemaSoftwareForm(instance=sistema)
+    return render(request, 'core/sistema_form.html', {
         'form': form,
-        'titulo': 'Nuevo Proyecto',
-        'accion': 'Guardar Proyecto',
+        'sistema': sistema,
+        'titulo': f'Editar Sistema: {sistema.nombre}',
+        'accion': 'Actualizar Sistema',
     })
 
 
 @login_required
-def proyecto_edit(request, pk):
-    proyecto = get_object_or_404(Proyecto, pk=pk)
-    if request.method == 'POST':
-        form = ProyectoForm(request.POST, instance=proyecto)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Proyecto actualizado.')
-            return redirect('proyecto_detail', pk=pk)
-    else:
-        form = ProyectoForm(instance=proyecto)
-    return render(request, 'core/proyecto_form.html', {
-        'form': form,
-        'proyecto': proyecto,
-        'titulo': f'Editar: {proyecto.nombre}',
-        'accion': 'Actualizar',
-    })
+def sistema_detail(request, pk):
+    sistema = get_object_or_404(SistemaSoftware, pk=pk)
+    return render(request, 'core/sistema_detail.html', {'sistema': sistema})
 
 
-@login_required
-def proyecto_detail(request, pk):
-    proyecto = get_object_or_404(Proyecto, pk=pk)
-    facturas = proyecto.facturas.filter(is_active=True).order_by('-fecha')
-    return render(request, 'core/proyecto_detail.html', {
-        'proyecto': proyecto,
-        'facturas': facturas,
-    })
+# Alias para retrocompatibilidad
+proyecto_list = sistema_list
+proyecto_create = sistema_create
+proyecto_edit = sistema_edit
+proyecto_detail = sistema_detail
 
 
 # ─────────────────────────────────────────────
@@ -203,10 +215,13 @@ def factura_list(request):
     query = request.GET.get('q', '')
     estado = request.GET.get('estado', '')
     condicion = request.GET.get('condicion', '')
-    facturas = Factura.objects.select_related('cliente', 'proyecto').all()
+    facturas = Factura.objects.select_related('cliente').all()
     if query:
         facturas = facturas.filter(
-            Q(numero__icontains=query) | Q(cliente__nombre__icontains=query) | Q(concepto__icontains=query)
+            Q(numero__icontains=query) |
+            Q(cliente__nombre__icontains=query) |
+            Q(nombre_cliente__icontains=query) |
+            Q(concepto__icontains=query)
         )
     if estado == 'activa':
         facturas = facturas.filter(is_active=True)
@@ -233,7 +248,10 @@ def factura_create(request):
             return redirect('factura_list')
     else:
         form = FacturaForm()
-    return render(request, 'core/factura_form.html', {'form': form})
+    
+    # Pasamos los sistemas del inventario para que el usuario pueda auto-completar concepto/precio si desea
+    sistemas = SistemaSoftware.objects.filter(estado='ACTIVO')
+    return render(request, 'core/factura_form.html', {'form': form, 'sistemas': sistemas})
 
 
 @login_required
@@ -286,44 +304,52 @@ def abono_create(request, factura_pk):
     factura = get_object_or_404(Factura, pk=factura_pk)
     cpc = factura.cuentas_por_cobrar.first()
 
+    liquidar = request.GET.get('liquidar') == '1'
+
     if request.method == 'POST':
         form = AbonoForm(request.POST)
         if form.is_valid():
             abono = form.save(commit=False)
+            if liquidar:
+                abono.monto = cpc.saldo_pendiente  # Bloquear el monto al saldo completo
             abono.factura = factura
             abono.cliente = factura.cliente
             abono.usuario = request.user
-            abono.save()  # El modelo llama a actualizar_cuenta_por_cobrar automáticamente
+            abono.save()
             messages.success(request, f'Abono de RD$ {abono.monto} registrado correctamente.')
-            return redirect('cuenta_por_cobrar_list')
+            return redirect('abono_pdf', pk=abono.pk)
     else:
-        form = AbonoForm()
+        initial_monto = cpc.saldo_pendiente if cpc else 0
+        if not liquidar and factura.cuota_fija and factura.cuota_fija > 0 and cpc:
+            initial_monto = min(factura.cuota_fija, cpc.saldo_pendiente)
+        form = AbonoForm(initial={'monto': initial_monto, 'fecha': timezone.now().date()})
 
     return render(request, 'core/abono_form.html', {
         'form': form,
         'factura': factura,
         'cpc': cpc,
+        'is_liquidar': liquidar,
     })
 
 
 @login_required
 def factura_liquidar(request, factura_pk):
-    """Liquida el saldo pendiente completo registrando un abono por el monto exacto."""
-    factura = get_object_or_404(Factura, pk=factura_pk)
-    cpc = factura.cuentas_por_cobrar.first()
+    """Redirige a la pantalla de abono para liquidar el saldo pendiente completo con opción a comentario."""
+    from django.urls import reverse
+    from django.http import HttpResponseRedirect
+    url = reverse('abono_create', args=[factura_pk])
+    return HttpResponseRedirect(f"{url}?liquidar=1")
 
-    if cpc and cpc.saldo_pendiente > 0:
-        Abono.objects.create(
-            factura=factura,
-            cliente=factura.cliente,
-            monto=cpc.saldo_pendiente,
-            usuario=request.user,
+
+@login_required
+def abono_list(request):
+    query = request.GET.get('q', '')
+    abonos = Abono.objects.select_related('factura', 'cliente').all().order_by('-fecha')
+    if query:
+        abonos = abonos.filter(
+            Q(factura__numero__icontains=query) | Q(cliente__nombre__icontains=query) | Q(comentario__icontains=query)
         )
-        messages.success(request, f'Factura {factura.numero} liquidada completamente.')
-    else:
-        messages.info(request, 'Esta factura ya está saldada.')
-
-    return redirect('cuenta_por_cobrar_list')
+    return render(request, 'core/abono_list.html', {'abonos': abonos, 'query': query})
 
 
 @login_required

@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from core.models import (
-    Abono, Cliente, CuentaPorCobrar, Factura, Pago, Proyecto, Software
+    Abono, Cliente, CuentaPorCobrar, Factura, Pago, SistemaSoftware
 )
 
 User = get_user_model()
@@ -240,12 +240,12 @@ class ViewsAuthTest(TestCase):
         initial_count = CuentaPorCobrar.objects.count()
         data = {
             'cliente': self.cliente_obj.pk,
-            'proyecto': '',
             'concepto': 'Servicio de desarrollo',
             'monto': '25000',
             'impuestos': '4500',
             'condicion_pago': 'CREDITO',
             'metodo_pago': 'EFECTIVO',
+            'cuota_fija': '0',
             'fecha': date.today().strftime('%Y-%m-%d'),
         }
         response = self.client.post(reverse('factura_create'), data)
@@ -294,3 +294,43 @@ class ViewsAuthTest(TestCase):
         response = self.client.get(reverse('cliente_list') + '?q=INEXISTENTE_XYZ')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No se encontraron clientes')
+
+    def test_factura_contado_solo_nombre_cliente(self):
+        """Venta al contado no requiere cliente registrado, solo nombre."""
+        self.client.login(username='testuser', password='testpass123')
+        data = {
+            'nombre_cliente': 'Cliente Casual SRL',
+            'concepto': 'Software de Facturación Express',
+            'monto': '15000',
+            'impuestos': '0',
+            'condicion_pago': 'CONTADO',
+            'metodo_pago': 'TRANSFERENCIA',
+            'fecha': date.today().strftime('%Y-%m-%d'),
+        }
+        response = self.client.post(reverse('factura_create'), data)
+        self.assertEqual(response.status_code, 302)
+        factura = Factura.objects.filter(nombre_cliente='Cliente Casual SRL').first()
+        self.assertIsNotNone(factura)
+        self.assertEqual(factura.get_nombre_cliente(), 'Cliente Casual SRL')
+        self.assertIsNone(factura.cliente)
+        # Al ser al contado, no debe generar cuenta por cobrar
+        self.assertEqual(CuentaPorCobrar.objects.filter(factura=factura).count(), 0)
+
+    def test_sistema_software_inventario(self):
+        """Prueba de creación y listado de sistemas en inventario."""
+        self.client.login(username='testuser', password='testpass123')
+        data = {
+            'nombre': 'Sistema Clínico Premium',
+            'categoria': 'GESTION',
+            'precio': '45000',
+            'descripcion': 'Gestión de pacientes y citas',
+            'estado': 'ACTIVO',
+        }
+        response = self.client.post(reverse('sistema_create'), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(SistemaSoftware.objects.filter(nombre='Sistema Clínico Premium').exists())
+
+        response = self.client.get(reverse('sistema_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sistema Clínico Premium')
+        self.assertContains(response, '45,000')

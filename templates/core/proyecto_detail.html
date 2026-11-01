@@ -32,8 +32,8 @@
                     {% elif proyecto.estado == 'CANCELADO' %}<span class="badge badge-danger">Cancelado</span>{% endif %}
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span class="text-muted" style="font-size: 0.88rem;">Software</span>
-                    <span style="font-weight: 600;">{{ proyecto.software.nombre|default:"—" }}</span>
+                    <span class="text-muted" style="font-size: 0.88rem;">Categoría</span>
+                    <span style="font-weight: 600;">{{ proyecto.get_categoria_software_display }}</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span class="text-muted" style="font-size: 0.88rem;">Fecha Contratación</span>

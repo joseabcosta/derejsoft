@@ -31,7 +31,7 @@
                     <tr>
                         <th>Proyecto</th>
                         <th>Cliente</th>
-                        <th>Software</th>
+                        <th>Categoría</th>
                         <th class="text-right">Precio Total</th>
                         <th class="text-right">Anticipo</th>
                         <th class="text-right">Saldo</th>
@@ -49,7 +49,7 @@
                         <td>
                             <a href="{% url 'cliente_detail' proyecto.cliente.pk %}" style="font-weight: 600; color: var(--primary);">{{ proyecto.cliente.nombre }}</a>
                         </td>
-                        <td class="text-muted">{{ proyecto.software.nombre|default:"—" }}</td>
+                        <td class="text-muted">{{ proyecto.get_categoria_software_display }}</td>
                         <td class="text-right" style="font-weight: 700;">RD$ {{ proyecto.precio_total|intcomma }}</td>
                         <td class="text-right" style="color: var(--success); font-weight: 600;">RD$ {{ proyecto.monto_anticipo|intcomma }}</td>
                         <td class="text-right" style="font-weight: 800; color: {% if proyecto.saldo_pendiente > 0 %}var(--danger){% else %}var(--success){% endif %};">

@@ -120,8 +120,14 @@ LANGUAGE_CODE = 'es-do'
 TIME_ZONE = 'America/Santo_Domingo'
 
 USE_I18N = True
-
 USE_TZ = True
+
+# Formatting configuration
+FORMAT_MODULE_PATH = 'derejsoft.formats'
+USE_THOUSAND_SEPARATOR = True
+DECIMAL_SEPARATOR = '.'
+THOUSAND_SEPARATOR = ','
+NUMBER_GROUPING = 3
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
